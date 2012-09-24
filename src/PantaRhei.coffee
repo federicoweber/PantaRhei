@@ -1,5 +1,5 @@
 ### 
-#	PantaRhei.js v 0.0.1
+	PantaRhei.js v 0.0.1
 	
 	(c) 2012 Federico Weber
 	distributed under the MIT license.
@@ -51,10 +51,10 @@ Flow = class PantaRhei.Flow
 # This method is used to append a new worker in the queue 
 # it will throw an error if the worker is noth properly structured
 	use: (worker) ->
-		if not(_.isFunction worker.run) and not worker.id
-			throw new Error "Provide a proper worker"
-		else
+		if _.isFunction(worker.run) or _.isFunction(worker)
 			@_queue.push worker
+		else
+			throw new Error "Provide a proper worker"
 
 			# return the Flow to enable cascade coding
 			return this
@@ -116,6 +116,12 @@ Flow = class PantaRhei.Flow
 			if @_currentWorker and _.isFunction @_currentWorker.run
 				cNext = _.bind(@_next, this)
 				@_currentWorker.run(error, @shared, cNext)
+
+			# run the worker if it's a function
+			else if @_currentWorker and _.isFunction @_currentWorker
+				cNext = _.bind(@_next, this)
+				@_currentWorker(error, @shared, cNext)
+
 			else
 				throw new Error "The #{@_currentWorker.id} worker does not provide a run method"
 		
