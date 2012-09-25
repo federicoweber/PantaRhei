@@ -42,7 +42,7 @@ VERSION = PantaRhei.VERSION = "0.0.1"
 # It is possible to directly pass to the constructor the queue
 # If the id is not provided it will generate an uniq one
 Flow = class PantaRhei.Flow
-	constructor: (@id = _.uniqueId('flow_'), @_queue = new Array()) ->
+	constructor: (@id = _.uniqueId('flow_'), @queue = new Array()) ->
 		@_currentWorker = {}
 		# return the Flow to enable cascade coding
 		return this
@@ -52,22 +52,24 @@ Flow = class PantaRhei.Flow
 # it will throw an error if the worker is noth properly structured
 	use: (worker) ->
 		if _.isFunction(worker.run) or _.isFunction(worker)
-			@_queue.push worker
+			@queue.push worker
 		else
 			throw new Error "Provide a proper worker"
 
-			# return the Flow to enable cascade coding
-			return this
+		# return the Flow to enable cascade coding
+		return this
 
 	# This is the method used to actually run the flow
 	# if the @shared object is not provided it create an empty one
 	run: (@shared = {}) ->
-		if @_queue.length is 0
+		if @queue.length is 0
 			throw new Error "The workers queue is empty"
 		else
 			@_paused = false
+			# create a running copy of the queue. This is usefull to allow multiple consecutive run.
+			@_runningQueue = _.clone @queue
 			# reverse the queueu to run everthing int the proper order
-			@_queue.reverse()
+			@_runningQueue.reverse()
 			# fire the run event
 			@trigger('run', @shared)
 			# run the first worker
@@ -109,18 +111,18 @@ Flow = class PantaRhei.Flow
 			@trigger('error', error)
 
 		# run the worker queue
-		else if @_queue.length > 0
-			@_currentWorker = @_queue.pop()
+		else if @_runningQueue.length > 0
+			@_currentWorker = @_runningQueue.pop()
 
 			# run the worker if it provide the run method
 			if @_currentWorker and _.isFunction @_currentWorker.run
 				cNext = _.bind(@_next, this)
-				@_currentWorker.run(error, @shared, cNext)
+				@_currentWorker.run(@shared, cNext)
 
 			# run the worker if it's a function
 			else if @_currentWorker and _.isFunction @_currentWorker
 				cNext = _.bind(@_next, this)
-				@_currentWorker(error, @shared, cNext)
+				@_currentWorker(@shared, cNext)
 
 			else
 				throw new Error "The #{@_currentWorker.id} worker does not provide a run method"

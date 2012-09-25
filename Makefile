@@ -2,11 +2,11 @@ test:
 	mocha -u bdd -t 5000 -R "spec" --compilers coffee:coffee-script
 
 build:
-	coffee -c -o src/.. src/PantaRhei.coffee 
+	coffee  -j PantaRhei.js -c src/PantaRhei.coffee src/PantaRhei.workers.coffee
 	uglifyjs -o PantaRhei.min.js PantaRhei.js
 
 watch:
-	coffee -c -l -o src/.. -w src/PantaRhei.coffee
+	coffee -j PantaRhei.js -c -l  -w src/PantaRhei.coffee src/PantaRhei.workers.coffee
 
 docs:
 	docco src/PantaRhei.coffee
