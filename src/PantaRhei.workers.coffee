@@ -5,20 +5,6 @@
 # define the workers namespace
 workers = PantaRhei.workers = {}
 
-# ### iddle 
-# this can be used to pause the flow for the given time in milliseconds
-Iddle = class workers.Iddle extends Worker
-	constructor: (@duration, @id = _.uniqueId('iddle_')) ->
-	run: (@shared, @next) ->
-		onTimeout = ->
-			@next()
-		setTimeout onTimeout, @duration
-
-		return this
-	kill: ->
-		return null
-
-
 # ### JSON Loader 
 # Load a JSON or JSONP from a given url
 # The target url must be provided passing a **jsonUrl** to the constructor

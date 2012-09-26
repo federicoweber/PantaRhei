@@ -10,7 +10,7 @@
 
 
 (function() {
-  var Backbone, Flow, Iddle, JsonLoader, LoadAssets, PantaRhei, VERSION, Worker, root, workers, _,
+  var Backbone, Flow, JsonLoader, LoadAssets, PantaRhei, VERSION, Worker, root, workers, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -141,34 +141,6 @@
   Flow.extend = Worker.extend = Backbone.View.extend;
 
   workers = PantaRhei.workers = {};
-
-  Iddle = workers.Iddle = (function(_super) {
-
-    __extends(Iddle, _super);
-
-    function Iddle(duration, id) {
-      this.duration = duration;
-      this.id = id != null ? id : _.uniqueId('iddle_');
-    }
-
-    Iddle.prototype.run = function(shared, next) {
-      var onTimeout;
-      this.shared = shared;
-      this.next = next;
-      onTimeout = function() {
-        return this.next();
-      };
-      setTimeout(onTimeout, this.duration);
-      return this;
-    };
-
-    Iddle.prototype.kill = function() {
-      return null;
-    };
-
-    return Iddle;
-
-  })(Worker);
 
   JsonLoader = workers.JsonLoader = (function(_super) {
 
