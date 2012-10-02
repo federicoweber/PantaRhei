@@ -149,6 +149,7 @@
     function JsonLoader(jsonUrl, id) {
       this.jsonUrl = jsonUrl;
       this.id = id != null ? id : _.uniqueId('jsonLoader_');
+      this.jsonUrl = this.jsonUrl + '?ran=' + Math.random() * 999999;
     }
 
     JsonLoader.prototype.run = function(shared, next) {

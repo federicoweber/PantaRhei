@@ -15,6 +15,8 @@ workers = PantaRhei.workers = {}
 # and **errorThrown** and **XMLHttpRequest** in the options
 JsonLoader = class workers.JsonLoader extends Worker
 	constructor: (@jsonUrl, @id = _.uniqueId('jsonLoader_')) ->
+		# randomize url to prevent cache
+		@jsonUrl = @jsonUrl+'?ran='+Math.random()*999999
 	run: (@shared, @next) ->
 		that = this
 		# load the json
