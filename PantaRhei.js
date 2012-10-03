@@ -98,6 +98,7 @@
         this._currentWorker = this._runningQueue.pop();
         if (this._currentWorker && _.isFunction(this._currentWorker.run)) {
           cNext = _.bind(this._next, this);
+          this.trigger('step', this.shared, this._currentWorker);
           return this._currentWorker.run(this.shared, cNext);
         } else if (this._currentWorker && _.isFunction(this._currentWorker)) {
           cNext = _.bind(this._next, this);

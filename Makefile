@@ -1,5 +1,5 @@
 test:
-	mocha -u bdd -t 5000 -R "spec" --compilers coffee:coffee-script
+	mocha -u bdd -t 2000 -R "spec" --compilers coffee:coffee-script
 
 build:
 	coffee  -j PantaRhei.js -c src/PantaRhei.coffee src/PantaRhei.workers.coffee

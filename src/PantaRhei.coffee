@@ -117,6 +117,7 @@ Flow = class PantaRhei.Flow
 			# run the worker if it provide the run method
 			if @_currentWorker and _.isFunction @_currentWorker.run
 				cNext = _.bind(@_next, this)
+				@trigger('step', @shared, @_currentWorker)
 				@_currentWorker.run(@shared, cNext)
 
 			# run the worker if it's a function

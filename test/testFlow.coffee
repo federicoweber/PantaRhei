@@ -6,6 +6,7 @@ describe 'Flow', ->
 	describe 'run', ->
 		Flow = PantaRhei.Flow
 		test1 = test2 = {
+			id: "test1"
 			run: (shared, next) ->
 				next()
 		}
@@ -15,31 +16,34 @@ describe 'Flow', ->
 				next(err)
 		}
 
-		it 'accept a new worker with .use method', ->
+		it 'accept a new worker with .use method', (done)->
 			flow = new Flow 'test', null
 			flow
 				.use({id: 'test3', run: (shared, next) -> next()})
-				.queue.length.should.be = 1
+				.queue.length.should.be.eql 1
+				done()
 
-		it 'dispatch a run and complete event passing the shared obj', ->  
+		it 'dispatch a complete event passing the shared obj', (done)->  
 			flow = new Flow 'test', [test1, test2], {test: 'test'}
-			onComplete = onRun = (shared) ->
+			onComplete = (shared) ->
 				shared.should.include.keys 'test'
 				flow.off()
+				done()
+
 			flow
 				.on('complete', onComplete)
-				.on('run', onRun)
 				.run({test: 'test'})
 
-		it 'dispatch an error event passing the Error as an argument and pause', ->
+		it 'dispatch an error event passing the Error as an argument and pause', (done)->
 			flow = {} = new Flow 'test', [errorTest, test1]
-			onError = (err) ->
+			onError = (error) ->
 				error.should.be.a 'error'
-				flow._pause.should.be true
+				flow._paused.should.be.true
+				done()
 				flow.off()
 
 			flow
-				.on('error', (error) ->)
+				.on('error', onError)
 				.run({test: 'test'})
 
 		it 'should be possible to resume a flow', (done)->
@@ -71,6 +75,17 @@ describe 'Flow', ->
 			flow
 				.on('complete', onComplete)
 				.run({"runnTime": 1})
+
+		it 'should dispatch a step event passing the shared object and the worker', (done) ->
+			flow = {} = new Flow 'test', [test1]
+			onStep = (shared, worker) ->
+				shared.should.include.keys 'test'
+				worker.id.should.be.equal 'test1'
+				done()
+				flow.off()
+			flow
+				.on('step', onStep)
+				.run({"test": "test"})
 
 	describe 'pause', ->
 	describe 'stop', ->
