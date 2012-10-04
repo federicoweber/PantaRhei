@@ -1,5 +1,5 @@
 ### 
-	PantaRhei.js v 0.0.1
+	PantaRhei.js v 0.1.1
 	
 	(c) 2012 Federico Weber
 	distributed under the MIT license.
@@ -29,7 +29,7 @@ if Backbone is undefined
 
 # Nest top-level namespace into Backbone
 root.PantaRhei = PantaRhei
-VERSION = PantaRhei.VERSION = "0.0.1"
+VERSION = PantaRhei.VERSION = "0.1.1"
 
 # ## Flow
 #
