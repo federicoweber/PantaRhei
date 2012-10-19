@@ -1,5 +1,5 @@
 ### 
-	PantaRhei.js v 0.1.1
+	PantaRhei.js v 0.1.2
 	
 	(c) 2012 Federico Weber
 	distributed under the MIT license.
@@ -29,7 +29,7 @@ if Backbone is undefined
 
 # Nest top-level namespace into Backbone
 root.PantaRhei = PantaRhei
-VERSION = PantaRhei.VERSION = "0.1.1"
+VERSION = PantaRhei.VERSION = "0.1.2"
 
 # ## Flow
 #
@@ -44,6 +44,10 @@ VERSION = PantaRhei.VERSION = "0.1.1"
 Flow = class PantaRhei.Flow
 	constructor: (@id = _.uniqueId('flow_'), @queue = new Array()) ->
 		@_currentWorker = {}
+
+		# assign an uniq name ad id to the workers
+		@_naming worker for worker in @queue
+
 		# return the Flow to enable cascade coding
 		return this
 #	### Methods
@@ -52,6 +56,7 @@ Flow = class PantaRhei.Flow
 # it will throw an error if the worker is noth properly structured
 	use: (worker) ->
 		if _.isFunction(worker.run) or _.isFunction(worker)
+			@_naming worker
 			@queue.push worker
 		else
 			throw new Error "Provide a proper worker"
@@ -98,17 +103,30 @@ Flow = class PantaRhei.Flow
 			# return the Flow to enable cascade coding
 			return this
 
+# #### _naming
+# this is an internal function to an name and an id to the worker to ease debugging
+# the given name is equal to the worker id
+	_naming: (worker) ->
+		
+		# add the id if it's not provided
+		unless worker.id?
+			if !uniqId?
+				uniqId = _.uniqueId('worker_')
+			worker.id = uniqId
+
+# #### _next
 # this private method is used to actually run the worker 
 # it's also passed as the **next** callback to each worker
-	_next: (error)->
-		# kill the previous worker
-		if @_currentWorker and _.isFunction @_currentWorker.kill
-			@_currentWorker.kill()
+	_next: (error) ->
 
 		# if an error is passed in fire the error event and pause the flow
 		if error
 			@pause()
-			@trigger('error', error)
+			@trigger('error', error, @_currentWorker.id)
+
+		# kill the previous worker
+		if @_currentWorker and _.isFunction @_currentWorker.kill
+			@_currentWorker.kill()
 
 		# run the worker queue
 		else if @_runningQueue.length > 0
@@ -122,11 +140,12 @@ Flow = class PantaRhei.Flow
 
 			# run the worker if it's a function
 			else if @_currentWorker and _.isFunction @_currentWorker
+				@trigger('step', @shared, @_currentWorker)
 				cNext = _.bind(@_next, this)
 				@_currentWorker(@shared, cNext)
 
 			else
-				throw new Error "The #{@_currentWorker.id} worker does not provide a run method"
+				throw new Error "The #{@_currentWorker.id} cannot be executed"
 		
 		# fire the **complete** event if the queue have been succesfully runned
 		else
