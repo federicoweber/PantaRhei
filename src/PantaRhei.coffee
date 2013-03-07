@@ -129,7 +129,7 @@ Flow = class PantaRhei.Flow
 			@_currentWorker.kill()
 
 		# run the worker queue
-		else if @_runningQueue.length > 0
+		if @_runningQueue.length > 0
 			@_currentWorker = @_runningQueue.pop()
 
 			# run the worker if it provide the run method
