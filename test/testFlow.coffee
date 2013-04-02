@@ -66,7 +66,7 @@ describe 'Flow', ->
 		it 'dispatch an error event passing the Error as an argument and pause', (done)->
 			flow = {} = new Flow 'test', [errorTest, test1]
 			onError = (error) ->
-				error.should.be.a 'error'
+				typeof error.should.be.a 'object'
 				flow._paused.should.be.true
 				done()
 				flow.off()
