@@ -108,26 +108,27 @@
 
       if (error) {
         this.pause();
-        this.trigger('error', error, this._currentWorker.id);
-      }
-      if (this._currentWorker && _.isFunction(this._currentWorker.kill)) {
-        this._currentWorker.kill();
-      }
-      if (this._runningQueue.length > 0) {
-        this._currentWorker = this._runningQueue.pop();
-        if (this._currentWorker && _.isFunction(this._currentWorker.run)) {
-          cNext = _.bind(this._next, this);
-          this.trigger('step', this.shared, this._currentWorker);
-          return this._currentWorker.run(this.shared, cNext);
-        } else if (this._currentWorker && _.isFunction(this._currentWorker)) {
-          this.trigger('step', this.shared, this._currentWorker);
-          cNext = _.bind(this._next, this);
-          return this._currentWorker(this.shared, cNext);
-        } else {
-          throw new Error("The " + this._currentWorker.id + " cannot be executed");
-        }
+        return this.trigger('error', error, this._currentWorker.id);
       } else {
-        return this.trigger('complete', this.shared);
+        if (this._currentWorker && _.isFunction(this._currentWorker.kill)) {
+          this._currentWorker.kill();
+        }
+        if (this._runningQueue.length > 0) {
+          this._currentWorker = this._runningQueue.pop();
+          if (this._currentWorker && _.isFunction(this._currentWorker.run)) {
+            cNext = _.bind(this._next, this);
+            this.trigger('step', this.shared, this._currentWorker);
+            return this._currentWorker.run(this.shared, cNext);
+          } else if (this._currentWorker && _.isFunction(this._currentWorker)) {
+            this.trigger('step', this.shared, this._currentWorker);
+            cNext = _.bind(this._next, this);
+            return this._currentWorker(this.shared, cNext);
+          } else {
+            throw new Error("The " + this._currentWorker.id + " cannot be executed");
+          }
+        } else {
+          return this.trigger('complete', this.shared);
+        }
       }
     };
 

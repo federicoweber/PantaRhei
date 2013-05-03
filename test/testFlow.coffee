@@ -75,6 +75,29 @@ describe 'Flow', ->
 				.on('error', onError)
 				.run({test: 'test'})
 
+		it 'Should not fire the complete event if an error is throw form a worker', (done)->
+			flow = {} = new Flow 'test', [errorTest, test1]
+			completed = false
+			onError = (error) ->
+				typeof error.should.be.a 'object'
+				flow._paused.should.be.true
+
+				# fire the check sattus after a timeout to make sure the flow havent been completed
+				setTimeout checkStatus, 50
+				
+			onComplete = ->
+				completed = true
+
+			checkStatus = ->
+				completed.should.be.false
+				flow.off()
+				done()
+
+			flow
+				.on('error', onError)
+				.on('complete', onComplete)
+				.run({test: 'test'})
+
 		it 'If an error is trown the event will return, as the second argument, the worker id', (done)->
 			flow = {} = new Flow 'test', [errorTest, test1]
 			onError = (error, wkId) ->

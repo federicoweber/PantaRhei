@@ -123,34 +123,34 @@ Flow = class PantaRhei.Flow
 		if error
 			@pause()
 			@trigger('error', error, @_currentWorker.id)
-
-		# kill the previous worker
-		if @_currentWorker and _.isFunction @_currentWorker.kill
-			@_currentWorker.kill()
-
-		# run the worker queue
-		if @_runningQueue.length > 0
-			@_currentWorker = @_runningQueue.pop()
-
-			# run the worker if it provide the run method
-			if @_currentWorker and _.isFunction @_currentWorker.run
-				cNext = _.bind(@_next, this)
-				@trigger('step', @shared, @_currentWorker)
-				@_currentWorker.run(@shared, cNext)
-
-			# run the worker if it's a function
-			else if @_currentWorker and _.isFunction @_currentWorker
-				@trigger('step', @shared, @_currentWorker)
-				cNext = _.bind(@_next, this)
-				@_currentWorker(@shared, cNext)
-
-			else
-				throw new Error "The #{@_currentWorker.id} cannot be executed"
-		
-		# fire the **complete** event if the queue have been succesfully runned
 		else
-			# TODO: set the app as notBusy
-			@trigger('complete', @shared)
+			# kill the previous worker
+			if @_currentWorker and _.isFunction @_currentWorker.kill
+				@_currentWorker.kill()
+
+			# run the worker queue
+			if @_runningQueue.length > 0
+				@_currentWorker = @_runningQueue.pop()
+
+				# run the worker if it provide the run method
+				if @_currentWorker and _.isFunction @_currentWorker.run
+					cNext = _.bind(@_next, this)
+					@trigger('step', @shared, @_currentWorker)
+					@_currentWorker.run(@shared, cNext)
+
+				# run the worker if it's a function
+				else if @_currentWorker and _.isFunction @_currentWorker
+					@trigger('step', @shared, @_currentWorker)
+					cNext = _.bind(@_next, this)
+					@_currentWorker(@shared, cNext)
+
+				else
+					throw new Error "The #{@_currentWorker.id} cannot be executed"
+			
+			# fire the **complete** event if the queue have been succesfully runned
+			else
+				# TODO: set the app as notBusy
+				@trigger('complete', @shared)
 
 # enable events for the Flow
 _.extend(Flow.prototype, Backbone.Events)
