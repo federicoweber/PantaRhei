@@ -1,5 +1,5 @@
 ### 
-	PantaRhei.js v 0.1.2
+	PantaRhei.js v 0.1.3
 	
 	(c) 2012 Federico Weber
 	distributed under the MIT license.
@@ -29,7 +29,7 @@ if Backbone is undefined
 
 # Nest top-level namespace into Backbone
 root.PantaRhei = PantaRhei
-VERSION = PantaRhei.VERSION = "0.1.2"
+VERSION = PantaRhei.VERSION = "0.1.3"
 
 # ## Flow
 #
@@ -83,13 +83,17 @@ Flow = class PantaRhei.Flow
 		# return the Flow to enable cascade coding
 		return this
 
+	# #### Pause
+	# Simply pause the flow
 	pause: ->
 		@_paused = true
 		@trigger('pause', @shared)
 
 		# return the Flow to enable cascade coding
 		return this
-
+	
+	# #### Resume
+	# Resume a paused Flow
 	resume: ->
 		@_paused = false
 		@trigger('resume', @shared)
@@ -98,10 +102,19 @@ Flow = class PantaRhei.Flow
 		# return the Flow to enable cascade coding
 		return this
 
-	kill: ->
-
-			# return the Flow to enable cascade coding
-			return this
+	# #### Terminate
+	# This is used to interrupt the flow at will; it will empty the running queue and throw a **terminate** and a **done** event.
+	terminate: ->
+		@_runningQueue = []
+		@trigger('terminate', @shared)
+		@_next()
+		
+		# return the Flow to enable cascade coding
+		return this
+	
+	# kill: ->
+	# 	# return the Flow to enable cascade coding
+	# 	return this
 
 # #### _naming
 # this is an internal function to an name and an id to the worker to ease debugging

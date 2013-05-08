@@ -1,4 +1,4 @@
-#PantaRhei.js v 0.0.1
+#PantaRhei.js v 0.1.3
 
 (c) 2012 [Federico Weber](http://federicoweber.com)
 distributed under the MIT license.

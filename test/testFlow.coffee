@@ -126,6 +126,34 @@ describe 'Flow', ->
 				.on('pause', onPause)
 				.run()
 
+		it 'should be possible to terminate a flow on a chosed step', (done)->
+			flow = {} = new Flow 'test', []
+			terminated = false
+			allRunned = false
+
+			onComplete = (shared) ->
+				terminated.should.be.true
+				allRunned.should.be.false
+				done()
+				flow.off()
+
+			onTerminate = () ->
+				terminated = true
+
+			flow
+				.on('terminate', onTerminate)
+				.on('complete', onComplete)
+				.use(
+					(shared, next)->
+						@terminate()
+				)
+				.use(
+					(shared, next)->
+						allRunned = true
+						next()
+				)
+				.run()
+
 		it 'should be possible to run the flow twice', (done) ->
 			flow = {} = new Flow 'test', [test1, test2]
 			onComplete = (shared) ->
