@@ -3,19 +3,19 @@ chai.should()
 PantaRhei = require '../src/PantaRhei'
 
 describe 'Flow', ->  
-	describe 'run', ->
-		Flow = PantaRhei.Flow
-		test1 = test2 = {
-			run: (shared, next) ->
-				next()
-		}
-		errorTest = {
-			id: 'errorWorker'
-			run: (shared, next) ->
-				err = new Error('something went wrong')
-				next(err)
-		}
-
+	Flow = PantaRhei.Flow
+	test1 = test2 = {
+		run: (shared, next) ->
+			next()
+	}
+	errorTest = {
+		id: 'errorWorker'
+		run: (shared, next) ->
+			err = new Error('something went wrong')
+			next(err)
+	}
+	
+	describe 'create the flow', ->
 		it 'accept a new worker with .use method', (done)->
 			flow = new Flow 'test', null
 			flow
@@ -52,6 +52,21 @@ describe 'Flow', ->
 				.on('step', onStep)
 				.run()
 
+		it 'accept a data check statement and add it in the worker queue', (done)->
+			flow = new Flow 'test', [], {test: true}
+			onComplete = (shared) ->
+				flow.queue.length.should.be.equal 3
+				flow.off()
+				done()
+
+			flow
+				.use(test1)
+				.check('test', true)
+				.use(test2)
+				.on('complete', onComplete)
+				.run()
+	
+	describe 'flow events', ->
 		it 'dispatch a complete event passing the shared obj', (done)->  
 			flow = new Flow 'test', [test1, test2], {test: 'test'}
 			onComplete = (shared) ->
@@ -109,6 +124,19 @@ describe 'Flow', ->
 				.on('error', onError)
 				.run({test: 'test'})
 
+		it 'should dispatch a step event passing the shared object and the worker', (done) ->
+			test1.id = 'test1'
+			flow = {} = new Flow 'test', [test1]
+			onStep = (shared, worker) ->
+				shared.should.include.keys 'test'
+				worker.id.should.be.equal 'test1'
+				done()
+				flow.off()
+			flow
+				.on('step', onStep)
+				.run({"test": "test"})
+
+	describe 'controlling the flow', ->
 		it 'should be possible to resume a flow', (done)->
 			flow = {} = new Flow 'test', [errorTest, test1]
 			
@@ -167,18 +195,28 @@ describe 'Flow', ->
 				.on('complete', onComplete)
 				.run({"runnTime": 1})
 
-		it 'should dispatch a step event passing the shared object and the worker', (done) ->
-			test1.id = 'test1'
-			flow = {} = new Flow 'test', [test1]
-			onStep = (shared, worker) ->
-				shared.should.include.keys 'test'
-				worker.id.should.be.equal 'test1'
+		it 'if a check fail it should interrupt the flow', (done)->
+			terminated = false
+			allRunned = false
+			flow = new Flow 'test', [], {test: true}
+			
+			onComplete = (shared) ->
+				terminated.should.be.true
+				allRunned.should.be.false
 				done()
 				flow.off()
-			flow
-				.on('step', onStep)
-				.run({"test": "test"})
 
-	describe 'pause', ->
-	describe 'stop', ->
-	describe 'reset', ->
+			onTerminate = () ->
+				terminated = true
+
+			flow
+				.use(test1)
+				.check('test', true)
+				.use(
+					(shared, next)->
+						allRunned = true
+						next()
+				)
+				.on('terminate', onTerminate)
+				.on('complete', onComplete)
+				.run()

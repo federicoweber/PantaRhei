@@ -51,9 +51,9 @@ Flow = class PantaRhei.Flow
 		# return the Flow to enable cascade coding
 		return this
 #	### Methods
-#	#### use
-# This method is used to append a new worker in the queue 
-# it will throw an error if the worker is noth properly structured
+	#	#### use
+	# This method is used to append a new worker in the queue 
+	# it will throw an error if the worker is noth properly structured
 	use: (worker) ->
 		if _.isFunction(worker.run) or _.isFunction(worker)
 			@_naming worker
@@ -63,7 +63,20 @@ Flow = class PantaRhei.Flow
 
 		# return the Flow to enable cascade coding
 		return this
+	# ### check
+	# This is used to add a test worker on the queue.
+	# It will test the provides key and value pairs against the shared object.
+	# If the test do faile the flow will be interrupted.
+	# As sole parameter it accept an object.
+	check: (@tests)->
+		worker = (shared, next)->
+			#ToDo add the test case in here
+			next()
+		@_naming worker
+		@queue.push worker
+		return this
 
+	# ### run
 	# This is the method used to actually run the flow
 	# if the @shared object is not provided it create an empty one
 	run: (@shared = {}) ->
