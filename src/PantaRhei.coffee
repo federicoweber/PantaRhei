@@ -1,5 +1,5 @@
 ### 
-	PantaRhei.js v 0.1.3
+	PantaRhei.js v 0.2.0
 	
 	(c) 2012 Federico Weber
 	distributed under the MIT license.
@@ -29,7 +29,7 @@ if Backbone is undefined
 
 # Nest top-level namespace into Backbone
 root.PantaRhei = PantaRhei
-VERSION = PantaRhei.VERSION = "0.1.3"
+VERSION = PantaRhei.VERSION = "0.2.0"
 
 # ## Flow
 #
@@ -56,6 +56,7 @@ Flow = class PantaRhei.Flow
 	# it will throw an error if the worker is noth properly structured
 	use: (worker) ->
 		if _.isFunction(worker.run) or _.isFunction(worker)
+			@_cacheFlow worker
 			@_naming worker
 			@queue.push worker
 		else
@@ -68,10 +69,9 @@ Flow = class PantaRhei.Flow
 	# It will test the provides key and value pairs against the shared object.
 	# If the test do faile the flow will be interrupted.
 	# As sole parameter it accept an object.
-	check: (@tests)->
-		worker = (shared, next)->
-			#ToDo add the test case in here
-			next()
+	check: (valuesToTest)->
+		worker = new ValueChecker(valuesToTest)
+		@_cacheFlow worker
 		@_naming worker
 		@queue.push worker
 		return this
@@ -129,9 +129,14 @@ Flow = class PantaRhei.Flow
 	# 	# return the Flow to enable cascade coding
 	# 	return this
 
-# #### _naming
-# this is an internal function to an name and an id to the worker to ease debugging
-# the given name is equal to the worker id
+	# #### _cacheFlow
+	# this is an internal function to store a reference to the flow into the worker
+	_cacheFlow: (worker) ->
+		worker._flow = this
+
+	# #### _naming
+	# this is an internal function to an name and an id to the worker to ease debugging
+	# the given name is equal to the worker id
 	_naming: (worker) ->
 		
 		# add the id if it's not provided
@@ -140,9 +145,9 @@ Flow = class PantaRhei.Flow
 				uniqId = _.uniqueId('worker_')
 			worker.id = uniqId
 
-# #### _next
-# this private method is used to actually run the worker 
-# it's also passed as the **next** callback to each worker
+	# #### _next
+	# this private method is used to actually run the worker 
+	# it's also passed as the **next** callback to each worker
 	_next: (error) ->
 
 		# if an error is passed in fire the error event and pause the flow
@@ -188,6 +193,10 @@ _.extend(Flow.prototype, Backbone.Events)
 Worker = class PantaRhei.Worker
 
 	constructor: (@id = _.uniqueId('worker_')) ->
+	# ### Attributes
+	# #### _flow
+	# This is a cached reference to the flow to which the worker belong and it's setted by the Flow
+	_flow: undefined
 	# ### Methods
 
 	# #### run
@@ -208,6 +217,27 @@ Worker = class PantaRhei.Worker
 		throw new ReferenceError "kill must be overridden "
 
 _.extend(Worker.prototype, Backbone.Events)
+# ### Value Checker
+# This is a special worker that is automatically created by the Flow.check method.
+# The only required attribute is @valuesToTest object that contains all the key value pairs to test.
+# If any of the test fail the worker will interrupt the flow
+class ValueChecker extends Worker
+	constructor: (@valuesToTest, @id = _.uniqueId('valueChecker_')) ->
+	run: (shared, next) ->
+		checkValues = _.chain(@valuesToTest)
+			.pairs()
+			.map(
+				(el)->
+					if shared[el[0]] is el[1] then true else false
+			)
+			.value()
+
+		if _.indexOf(checkValues, false) > -1
+			@_flow.terminate()
+		else
+			next()
+
+	kill: ->
 
 # ---
 # Borrowed the Backbone style extend

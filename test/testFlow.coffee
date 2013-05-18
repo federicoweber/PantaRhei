@@ -2,18 +2,19 @@ chai = require 'chai'
 chai.should()
 PantaRhei = require '../src/PantaRhei'
 
+Flow = PantaRhei.Flow
+test1 = test2 = {
+	run: (shared, next) ->
+		next()
+}
+errorTest = {
+	id: 'errorWorker'
+	run: (shared, next) ->
+		err = new Error('something went wrong')
+		next(err)
+}
+
 describe 'Flow', ->  
-	Flow = PantaRhei.Flow
-	test1 = test2 = {
-		run: (shared, next) ->
-			next()
-	}
-	errorTest = {
-		id: 'errorWorker'
-		run: (shared, next) ->
-			err = new Error('something went wrong')
-			next(err)
-	}
 	
 	describe 'create the flow', ->
 		it 'accept a new worker with .use method', (done)->
@@ -22,6 +23,16 @@ describe 'Flow', ->
 				.use({id: 'test3', run: (shared, next) -> next()})
 				.queue.length.should.be.eql 1
 				done()
+
+		it 'cache a reference to the flow in the worker _flow attribute', (done)->
+			flow = new Flow 'test', null
+			dummyWorker = (shared, next)->
+				next()
+			flow
+				.use(dummyWorker)
+				.queue.length.should.be.eql 1
+			dummyWorker._flow.should.be.eql flow
+			done()
 
 		it "add an uniq id for the worker if it's not provided by the constructor", (done)->
 			anWk = (shared,next) ->
@@ -53,7 +64,7 @@ describe 'Flow', ->
 				.run()
 
 		it 'accept a data check statement and add it in the worker queue', (done)->
-			flow = new Flow 'test', [], {test: true}
+			flow = new Flow 'test', []
 			onComplete = (shared) ->
 				flow.queue.length.should.be.equal 3
 				flow.off()
@@ -61,14 +72,14 @@ describe 'Flow', ->
 
 			flow
 				.use(test1)
-				.check('test', true)
+				.check({'test': true})
 				.use(test2)
 				.on('complete', onComplete)
-				.run()
+				.run({test: true})
 	
 	describe 'flow events', ->
 		it 'dispatch a complete event passing the shared obj', (done)->  
-			flow = new Flow 'test', [test1, test2], {test: 'test'}
+			flow = new Flow 'test', [test1, test2]
 			onComplete = (shared) ->
 				shared.should.include.keys 'test'
 				flow.off()
@@ -81,7 +92,7 @@ describe 'Flow', ->
 		it 'dispatch an error event passing the Error as an argument and pause', (done)->
 			flow = {} = new Flow 'test', [errorTest, test1]
 			onError = (error) ->
-				typeof error.should.be.a 'object'
+				typeof error.should.be.a 'error'
 				flow._paused.should.be.true
 				done()
 				flow.off()
@@ -94,7 +105,7 @@ describe 'Flow', ->
 			flow = {} = new Flow 'test', [errorTest, test1]
 			completed = false
 			onError = (error) ->
-				typeof error.should.be.a 'object'
+				typeof error.should.be.a 'error'
 				flow._paused.should.be.true
 
 				# fire the check sattus after a timeout to make sure the flow havent been completed
@@ -195,10 +206,36 @@ describe 'Flow', ->
 				.on('complete', onComplete)
 				.run({"runnTime": 1})
 
-		it 'if a check fail it should interrupt the flow', (done)->
+		it 'if all the tests are successful it should complete', (done)->
 			terminated = false
 			allRunned = false
-			flow = new Flow 'test', [], {test: true}
+			flow = new Flow 'test', []
+			
+			onComplete = (shared) ->
+				terminated.should.be.false
+				allRunned.should.be.true
+				done()
+				flow.off()
+
+			onTerminate = () ->
+				terminated = true
+
+			flow
+				.use(test1)
+				.check({'test': true, 'num': 1})
+				.use(
+					(shared, next)->
+						allRunned = true
+						next()
+				)
+				.on('terminate', onTerminate)
+				.on('complete', onComplete)
+				.run({'test': true, 'num': 1})
+
+		it 'if a test fail it should interrupt the flow', (done)->
+			terminated = false
+			allRunned = false
+			flow = new Flow 'test', []
 			
 			onComplete = (shared) ->
 				terminated.should.be.true
@@ -211,7 +248,7 @@ describe 'Flow', ->
 
 			flow
 				.use(test1)
-				.check('test', true)
+				.check({'test': false})
 				.use(
 					(shared, next)->
 						allRunned = true
@@ -219,4 +256,4 @@ describe 'Flow', ->
 				)
 				.on('terminate', onTerminate)
 				.on('complete', onComplete)
-				.run()
+				.run({'test': true, 'num': 1})

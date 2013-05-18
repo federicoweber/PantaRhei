@@ -1,4 +1,4 @@
-#PantaRhei.js v 0.1.3
+#PantaRhei.js v 0.2.0
 
 (c) 2012 [Federico Weber](http://federicoweber.com)
 distributed under the MIT license.
@@ -70,9 +70,25 @@ To execute the flow you have to invoke the **run** method. The flow can also acc
 		.use( task2 )
 		// run the flow
 		.run({data: "the data is new"});
+
+#### Check values of the shared object
+Sometimes it is useful to interrupt the flow if the data processed from the flow till a given point are invalid, or differ fro the expected ones. To ease this kind of data check the Flow comes with a **check**  method; 
+To check the data in the shared object you just need to provide an object with all the expected keys and values pair. If all the values in the shared object match our test, the flow will continue with the execution, otherwise it will terminate; cleaning the running queue and firing both the *terminate* and *complete* events.
+		
+		flow
+		.on('complete', function(){
+			$('#main').append("flow completed <br>");
+		})
+		.on('terminate', function(){
+			$('#main').append("flow terminated <br>");
+		})
+		.use(function(shared, next){next()})
+		.check({test: 'it', num: 0})
+		.use(function(shared, next){next()})
+		.run({test: 'it', num: 1});
 		
 #### Events
-PantaRhei make use of the Backbone Events, so the  Flow can dispatch the following events: run, pause, resume, error and complete. Apart from the error all the other events pass the shared object as an argument to the listener.
+PantaRhei make use of the Backbone Events, so the  Flow can dispatch the following events: *run, pause, resume, error, terminate and complete*. Apart from the error all the other events pass the shared object as an argument to the listener.
 So to get notified when a flow have been successfully executed you can catch the complete event.
 	
 	var onComplete = function( shared ){
