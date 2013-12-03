@@ -1,6 +1,6 @@
 {
     "name": "PantaRhei"
-  , "version": "0.1.1"
+  , "version": "0.2.1"
   , "author": "Federico Weber <federicoweber@gmail.com>"
   , "description": "A middleware pattern implementation for Backbone"
   , "main": "PantaRhei"

@@ -14,9 +14,10 @@ workers = PantaRhei.workers = {}
 # if ajax is unable to load the json it will pass the error with **textStatus** to the callback stack
 # and **errorThrown** and **XMLHttpRequest** in the options
 JsonLoader = class workers.JsonLoader extends Worker
-	constructor: (@jsonUrl, @id = _.uniqueId('jsonLoader_')) ->
+	constructor: (@jsonUrl, @id = _.uniqueId('jsonLoader_'), @randomize = true) ->
 		# randomize url to prevent cache
-		@jsonUrl = @jsonUrl+'?ran='+Math.random()*999999
+		randomizeQuery = if @randomize then "?ran=#{Math.random()*999999}" else ''
+		@jsonUrl = @jsonUrl+randomizeQuery
 	run: (@shared, @next) ->
 		that = this
 		# load the json

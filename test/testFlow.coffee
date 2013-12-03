@@ -92,7 +92,6 @@ describe 'Flow', ->
 		it 'dispatch an error event passing the Error as an argument and pause', (done)->
 			flow = {} = new Flow 'test', [errorTest, test1]
 			onError = (error) ->
-				typeof error.should.be.a 'error'
 				flow._paused.should.be.true
 				done()
 				flow.off()
@@ -105,7 +104,6 @@ describe 'Flow', ->
 			flow = {} = new Flow 'test', [errorTest, test1]
 			completed = false
 			onError = (error) ->
-				typeof error.should.be.a 'error'
 				flow._paused.should.be.true
 
 				# fire the check sattus after a timeout to make sure the flow havent been completed
